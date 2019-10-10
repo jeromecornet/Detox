@@ -40,12 +40,17 @@ class AppleSimUtils {
       os = deviceInfo.newestRuntime.version;
     }
 
-    const response = await this._execAppleSimUtils({ args: `--list --byType "${type}" --byOS "${os}"`}, statusLogs, 1);
-    const parsed = this._parseResponseFromAppleSimUtils(response);
-    const udids = _.map(parsed, 'udid');
+    let response = await this._execAppleSimUtils({ args: `--list --byType "${type}" --byOS "${os}"`}, statusLogs, 1);
+    let parsed = this._parseResponseFromAppleSimUtils(response);
+    let udids = _.map(parsed, 'udid');
     if (!udids || !udids.length || !udids[0]) {
-      throw new Error(`Can't find a simulator to match with "${query}", run 'xcrun simctl list' to list your supported devices.
-      It is advised to only state a device type, and not to state iOS version, e.g. "iPhone 7"`);
+      response = await this._execAppleSimUtils({ args: `--list --byName "${query}"`}, statusLogs, 1);
+      parsed = this._parseResponseFromAppleSimUtils(response);
+      udids = _.map(parsed, 'udid');
+      if (!udids || !udids.length || !udids[0]) {
+        throw new Error(`Can't find a simulator to match with "${query}", run 'xcrun simctl list' to list your supported devices.
+        It is advised to only state a device type, and not to state iOS version, e.g. "iPhone 7"`);
+      }
     }
     return udids;
   }
